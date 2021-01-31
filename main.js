@@ -2,12 +2,15 @@ import gallery from './gallery-items.js'
 
 let galleryArray = [];
 
-const galleryListRef = document.querySelector('.js-gallery')
-const lightBox = document.querySelector('.js-lightbox')
-const lightBoxImage = document.querySelector('.lightbox__image')
-const buttonClose = document.querySelector('button[data-action="close-lightbox"]')
-const lightBoxOverlay = document.querySelector('.lightbox__overlay')
+const ref = {
+    galleryListRef: document.querySelector('.js-gallery'),
+    lightBox: document.querySelector('.js-lightbox'),
+    lightBoxImage: document.querySelector('.lightbox__image'),
+    buttonClose: document.querySelector('button[data-action="close-lightbox"]'),
+    lightBoxOverlay: document.querySelector('.lightbox__overlay'),
+}
 
+const { galleryListRef, lightBox, lightBoxImage, buttonClose, lightBoxOverlay } = ref;
 
 galleryListRef.addEventListener('click', openModal)
 galleryListRef.addEventListener('keydown', closeModalWithEscape)
@@ -21,11 +24,15 @@ function openModal(event) {
     if(event.target.nodeName !== 'IMG') {
         return;
     }
+
+    window.addEventListener('keydown', handleSwitchClick)
+
     
     lightBox.classList.add('is-open')
 
     lightBoxImage.setAttribute('src', event.target.dataset.source)
     lightBoxImage.setAttribute('alt', event.target.alt)
+    lightBoxImage.setAttribute('data-index', event.target.dataset.index)
 }
 
 function closeModal() {
@@ -40,9 +47,39 @@ function closeModalWithEscape(event) {
         closeModal()
     }
 }
+function handleSwitchClick(event) {
+    const { dataset } = lightBoxImage;
+    const currentIndex = Number(dataset.index);
+
+    if (event.code === 'ArrowRight') {
+        if (currentIndex === gallery.length - 1) {
+            lightBoxImage.src = gallery[0].original
+            lightBoxImage.alt = gallery[0].description
+            dataset.index = 0;
+            return;
+    }
+    
+        lightBoxImage.src = gallery[currentIndex + 1].original
+        lightBoxImage.alt = gallery[currentIndex + 1].description
+        dataset.index = currentIndex + 1;
+    }
+
+    if (event.code === 'ArrowLeft') {
+        if (currentIndex === 0) {
+            lightBoxImage.src = gallery[gallery.length - 1].original
+            lightBoxImage.alt = gallery[gallery.length - 1].description
+            dataset.index = gallery.length - 1;
+            return;
+    }
+    
+        lightBoxImage.src = gallery[currentIndex - 1].original
+        lightBoxImage.alt = gallery[currentIndex - 1].description
+        dataset.index = currentIndex - 1;
+    }
+}
 
 function renderGallery(anyGallery) {
-    anyGallery.forEach(item => {
+    anyGallery.forEach((item, index) => {
         const galleryItem = document.createElement('li');
         galleryItem.classList.add('gallery__item')
 
@@ -55,6 +92,7 @@ function renderGallery(anyGallery) {
         galleryItemImage.setAttribute('src', item.preview)
         galleryItemImage.setAttribute('data-source', item.original)
         galleryItemImage.setAttribute('alt', item.description)
+        galleryItemImage.setAttribute('data-index', index)
 
         galleryItem.appendChild(galleryItemLink)
         galleryItemLink.appendChild(galleryItemImage)
